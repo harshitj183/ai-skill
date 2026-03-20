@@ -36,6 +36,7 @@ function copySync(src, dest) {
 const targetRolesDir = path.join(targetDir, 'roles');
 const targetSkillsDir = path.join(targetDir, 'skills');
 const targetSkillMd = path.join(targetDir, 'SKILL.md');
+const gitignorePath = path.join(targetDir, '.gitignore');
 
 try {
     console.log(`${colors.blue}[+] Copying Master Rules (SKILL.md)...${colors.reset}`);
@@ -50,6 +51,19 @@ try {
 
     console.log(`${colors.blue}[+] Extracting 17 Mega-Skills...${colors.reset}`);
     copySync(path.join(sourceDir, 'skills'), targetSkillsDir);
+    
+    console.log(`${colors.blue}[+] Securing source control (.gitignore)...${colors.reset}`);
+    const ignoreRules = "\n\n# Smart AI Skills Library (Context Only)\nSKILL.md\n.cursorrules\nroles/\nskills/\n";
+    if (fs.existsSync(gitignorePath)) {
+        const currentIgnore = fs.readFileSync(gitignorePath, 'utf8');
+        if (!currentIgnore.includes('# Smart AI Skills Library')) {
+            fs.appendFileSync(gitignorePath, ignoreRules);
+            console.log(`    ${colors.cyan}-> Appended rules to existing .gitignore${colors.reset}`);
+        }
+    } else {
+        fs.writeFileSync(gitignorePath, ignoreRules.trim() + "\n");
+        console.log(`    ${colors.cyan}-> Created new .gitignore file${colors.reset}`);
+    }
 
     console.log(`\n${colors.bright}${colors.green}[Success] Smart AI Skills installed in your workspace.${colors.reset}`);
     console.log(`${colors.yellow}Notice for Cursor IDE:${colors.reset} File Explorer -> Rename 'SKILL.md' to '.cursorrules'\n`);
