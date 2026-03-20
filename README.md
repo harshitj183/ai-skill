@@ -3,7 +3,7 @@
   <h1>Smart Instructions Library of AI Skill</h1>
 
   <p>
-    <a href="https://www.npmjs.com/package/smart-instructions-library-of-ai-skill"><img src="https://img.shields.io/npm/v/smart-instructions-library-of-ai-skill.svg?style=for-the-badge&color=blue" alt="npm version"></a>
+    <a href="https://www.npmjs.com/package/@harshitj183/smart-instructions-library-of-ai-skill"><img src="https://img.shields.io/npm/v/@harshitj183/smart-instructions-library-of-ai-skill.svg?style=for-the-badge&color=blue" alt="npm version"></a>
     <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge" alt="License: MIT"></a>
     <a href="http://makeapullrequest.com"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge" alt="PRs Welcome"></a>
   </p>
@@ -22,7 +22,7 @@ This library gives your AI agents extreme precision, bypassing general hallucina
 Run our zero-dependency official installer inside any project directory (Next.js, Python, React Native, etc.) to instantly deploy the full library to your workspace.
 
 ```bash
-npx smart-instructions-library-of-ai-skill init
+npx @harshitj183/smart-instructions-library-of-ai-skill init
 ```
 
 > **Note for Cursor IDE users:** Rename the copied `SKILL.md` to `.cursorrules` to automatically enforce global project rules across all your IDE chats.
