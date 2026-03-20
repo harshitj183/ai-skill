@@ -25,8 +25,9 @@ jobs:
       - name: Scope Package Name Dynamically
         run: |
           npm pkg set name="@harshitj183/smart-instructions-library-of-ai-skill"
+          npm pkg set publishConfig.registry="https://npm.pkg.github.com/"
           
       - name: Publish to GitHub Packages Registry
-        run: npm publish
+        run: npm publish --registry=https://npm.pkg.github.com/
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
