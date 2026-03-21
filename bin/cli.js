@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
+const fs = require('fs-extra');
 const path = require('path');
+const { program } = require('commander');
+const inquirer = require('inquirer');
 
 // ANSI Terminal Colors
 const colors = {
@@ -16,64 +18,251 @@ const colors = {
 
 const targetDir = process.cwd();
 const sourceDir = path.join(__dirname, '..');
-
-console.log(`${colors.bright}${colors.cyan}Initializing Smart AI Skills Library...${colors.reset}\n`);
-
-// Helper function to copy files and directories recursively
-function copySync(src, dest) {
-    if (!fs.existsSync(src)) return;
-    const stat = fs.statSync(src);
-    if (stat.isDirectory()) {
-        if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
-        fs.readdirSync(src).forEach(file => {
-            copySync(path.join(src, file), path.join(dest, file));
-        });
-    } else {
-        fs.copyFileSync(src, dest);
-    }
-}
-
 const targetDirBase = path.join(targetDir, 'smart-instructions');
 
-if (!fs.existsSync(targetDirBase)) {
-    fs.mkdirSync(targetDirBase, { recursive: true });
-}
+program
+  .name('ai-skills')
+  .description('The Ultimate AI Skill Library CLI')
+  .version('2.0.1');
 
-const targetRolesDir = path.join(targetDirBase, 'roles');
-const targetSkillsDir = path.join(targetDirBase, 'skills');
-const targetSkillMd = path.join(targetDirBase, 'SKILL.md');
-const gitignorePath = path.join(targetDir, '.gitignore');
+program
+  .command('init')
+  .description('Installs the Smart AI Skills Library')
+  .option('-i, --interactive', 'Run interactively to select specific roles/skills')
+  .option('-r, --roles <roles>', 'Comma-separated list of roles to install')
+  .option('-s, --skills <skills>', 'Comma-separated list of skills to install')
+  .action(async (options) => {
+    console.log(`${colors.bright}${colors.cyan}Initializing Smart AI Skills Library...${colors.reset}\n`);
 
-try {
-    console.log(`${colors.blue}[+] Initializing 'smart-instructions' workspace...${colors.reset}`);
-    if (fs.existsSync(path.join(sourceDir, 'SKILL.md'))) {
-        fs.copyFileSync(path.join(sourceDir, 'SKILL.md'), targetSkillMd);
+    const availableRoles = fs.existsSync(path.join(sourceDir, 'roles')) ? fs.readdirSync(path.join(sourceDir, 'roles')) : [];
+    const availableSkills = fs.existsSync(path.join(sourceDir, 'skills')) ? fs.readdirSync(path.join(sourceDir, 'skills')) : [];
+
+    let selectedRoles = availableRoles;
+    let selectedSkills = availableSkills;
+
+    if (options.interactive) {
+      const { installType } = await inquirer.prompt([
+        {
+          type: 'list',
+          name: 'installType',
+          message: 'How would you like to install the skills?',
+          choices: [
+            'Install Everything (All 8 Roles, 17 Mega-Skills)',
+            'Custom Pick (Select specific roles and skills)'
+          ]
+        }
+      ]);
+
+      if (installType.startsWith('Custom')) {
+        const answers = await inquirer.prompt([
+          {
+            type: 'checkbox',
+            name: 'roles',
+            message: 'Select the Master Roles you need:',
+            choices: availableRoles.filter(f => f.endsWith('.md'))
+          },
+          {
+            type: 'checkbox',
+            name: 'skills',
+            message: 'Select the Mega-Skills you need:',
+            choices: availableSkills.filter(f => f.endsWith('.md'))
+          }
+        ]);
+        selectedRoles = answers.roles;
+        selectedSkills = answers.skills;
+      }
     } else {
-        console.warn(`${colors.yellow}[!] SKILL.md not found in source.${colors.reset}`);
+        if (options.roles) {
+            const rList = options.roles.split(',').map(r => r.trim());
+            selectedRoles = availableRoles.filter(r => rList.includes(r) || rList.includes(r.replace('.md', '')));
+        }
+        if (options.skills) {
+            const sList = options.skills.split(',').map(s => s.trim());
+            selectedSkills = availableSkills.filter(s => sList.includes(s) || sList.includes(s.replace('.md', '')));
+        }
     }
 
-    console.log(`${colors.blue}[+] Extracting 8 Master Roles...${colors.reset}`);
-    copySync(path.join(sourceDir, 'roles'), targetRolesDir);
+    if (!fs.existsSync(targetDirBase)) {
+        fs.mkdirSync(targetDirBase, { recursive: true });
+    }
 
-    console.log(`${colors.blue}[+] Extracting 17 Mega-Skills...${colors.reset}`);
-    copySync(path.join(sourceDir, 'skills'), targetSkillsDir);
-    
-    console.log(`${colors.blue}[+] Securing source control (.gitignore)...${colors.reset}`);
+    console.log(`\n${colors.blue}[+] Securing source control (.gitignore)...${colors.reset}`);
     const ignoreRules = "\n\n# Smart AI Skills Library (Context Only)\nsmart-instructions/\n";
+    const gitignorePath = path.join(targetDir, '.gitignore');
     if (fs.existsSync(gitignorePath)) {
         const currentIgnore = fs.readFileSync(gitignorePath, 'utf8');
         if (!currentIgnore.includes('# Smart AI Skills Library')) {
             fs.appendFileSync(gitignorePath, ignoreRules);
-            console.log(`    ${colors.cyan}-> Appended rules to existing .gitignore${colors.reset}`);
         }
     } else {
         fs.writeFileSync(gitignorePath, ignoreRules.trim() + "\n");
-        console.log(`    ${colors.cyan}-> Created new .gitignore file${colors.reset}`);
+    }
+
+    console.log(`${colors.blue}[+] Copying SKILL.md Master Rulebook...${colors.reset}`);
+    const targetSkillMd = path.join(targetDirBase, 'SKILL.md');
+    if (fs.existsSync(path.join(sourceDir, 'SKILL.md'))) {
+        fs.copyFileSync(path.join(sourceDir, 'SKILL.md'), targetSkillMd);
+    }
+    
+    if (selectedRoles.length > 0) {
+        console.log(`${colors.blue}[+] Extracting ${selectedRoles.length} Master Roles...${colors.reset}`);
+        fs.ensureDirSync(path.join(targetDirBase, 'roles'));
+        selectedRoles.forEach(role => {
+            fs.copyFileSync(path.join(sourceDir, 'roles', role), path.join(targetDirBase, 'roles', role));
+        });
+    }
+
+    if (selectedSkills.length > 0) {
+        console.log(`${colors.blue}[+] Extracting ${selectedSkills.length} Mega-Skills...${colors.reset}`);
+        fs.ensureDirSync(path.join(targetDirBase, 'skills'));
+        selectedSkills.forEach(skill => {
+            fs.copyFileSync(path.join(sourceDir, 'skills', skill), path.join(targetDirBase, 'skills', skill));
+        });
     }
 
     console.log(`\n${colors.bright}${colors.green}[Success] The 'smart-instructions' folder has been added to your project!${colors.reset}`);
-    console.log(`${colors.yellow}Notice for Cursor IDE:${colors.reset} Move 'smart-instructions/SKILL.md' to the root of your project and rename it to '.cursorrules'\n`);
+    console.log(`${colors.yellow}Tip: Let your AI Agent pick skills natively, or run 'npx ai-skills configure' to setup your IDE!${colors.reset}\n`);
+  });
+
+program
+  .command('configure')
+  .description('Auto-configures your IDE to use the skills')
+  .action(async () => {
+    console.log(`${colors.bright}${colors.cyan}IDE Auto-Configuration${colors.reset}\n`);
     
-} catch (error) {
-    console.error(`\n${colors.red}[Error] Failed to construct library structure: ${error.message}${colors.reset}\n`);
+    const targetSkillMd = path.join(targetDir, 'smart-instructions', 'SKILL.md');
+    if (!fs.existsSync(targetSkillMd)) {
+        console.error(`${colors.red}[Error] 'smart-instructions/SKILL.md' not found. Please run 'npx ai-skills init' first.${colors.reset}`);
+        return;
+    }
+
+    const { ideSelection } = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'ideSelection',
+        message: 'Which AI IDE or tool are you using?',
+        choices: [
+          'Cursor (.cursorrules)',
+          'Windsurf (.windsurfrules)',
+          'Claude Code (CLAUDE.md)',
+          'GitHub Copilot (.github/copilot-instructions.md)',
+          'Cline (.clinerules)',
+          'Cancel'
+        ]
+      }
+    ]);
+
+    let destPath = '';
+    if (ideSelection.startsWith('Cursor')) destPath = '.cursorrules';
+    else if (ideSelection.startsWith('Windsurf')) destPath = '.windsurfrules';
+    else if (ideSelection.startsWith('Claude')) destPath = 'CLAUDE.md';
+    else if (ideSelection.startsWith('GitHub')) destPath = '.github/copilot-instructions.md';
+    else if (ideSelection.startsWith('Cline')) destPath = '.clinerules';
+    else {
+        console.log(`${colors.yellow}Configuration cancelled.${colors.reset}`);
+        return;
+    }
+
+    const fullDestPath = path.join(targetDir, destPath);
+    if (destPath.includes('/')) {
+        fs.ensureDirSync(path.dirname(fullDestPath));
+    }
+
+    const ruleContent = fs.readFileSync(targetSkillMd, 'utf8');
+
+    if (fs.existsSync(fullDestPath)) {
+        const { overwrite } = await inquirer.prompt([
+            {
+                type: 'confirm',
+                name: 'overwrite',
+                message: `${destPath} already exists. Do you want to overwrite it?`,
+                default: false
+            }
+        ]);
+        if (!overwrite) {
+            console.log(`${colors.yellow}Configuration skipped.${colors.reset}`);
+            return;
+        }
+    }
+
+    fs.writeFileSync(fullDestPath, ruleContent);
+    console.log(`\n${colors.bright}${colors.green}[Success] ${destPath} has been successfully configured!${colors.reset}\n`);
+  });
+
+program
+  .command('create <skill_name>')
+  .description('Scaffolds a new custom Mega-Skill')
+  .action(async (skillName) => {
+    console.log(`${colors.bright}${colors.cyan}Custom Skill Scaffolding${colors.reset}\n`);
+    
+    const { audience, format } = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'audience',
+        message: 'Who is this skill for? (e.g., Frontend React Devs, Backend Node Devs):',
+      },
+      {
+         type: 'confirm',
+         name: 'format',
+         message: 'Include strict JSON formatting rules?',
+         default: true
+      }
+    ]);
+
+    const customDir = path.join(targetDir, 'smart-instructions', 'custom');
+    fs.ensureDirSync(customDir);
+
+    const destFile = path.join(customDir, `${skillName.replace('.md', '')}.md`);
+
+    const template = `# ${skillName} Mega-Skill\n\n## Objective\nProvide expert-level instructions for ${audience}.\n\n## Rules\n- Always prioritize clarity and performance.\n- Write modern, maintainable code.\n${format ? '- ALWAYS output responses in strict JSON format when requested.\n' : ''}\n## Architecture Guidelines\n1. Keep functions small and focused.\n2. Ensure rigorous error handling.\n`;
+
+    fs.writeFileSync(destFile, template);
+    console.log(`\n${colors.bright}${colors.green}[Success] Scaffolded new custom skill at ${destFile}!${colors.reset}\n`);
+  });
+
+program
+  .command('update')
+  .description('Updates the official skills without overwriting custom ones in /custom/')
+  .action(async () => {
+    console.log(`${colors.bright}${colors.cyan}Updating Official Skills${colors.reset}\n`);
+    const { proceed } = await inquirer.prompt([
+      {
+        type: 'confirm',
+        name: 'proceed',
+        message: 'This will safely copy the latest official skills into smart-instructions/ overriding existing ones. Custom folders will be preserved. Proceed?',
+        default: true
+      }
+    ]);
+
+    if (!proceed) {
+        console.log(`${colors.yellow}Update cancelled.${colors.reset}`);
+        return;
+    }
+
+    try {
+        fs.ensureDirSync(path.join(targetDir, 'smart-instructions', 'roles'));
+        fs.ensureDirSync(path.join(targetDir, 'smart-instructions', 'skills'));
+        
+        const rDir = path.join(sourceDir, 'roles');
+        if (fs.existsSync(rDir)) fs.copySync(rDir, path.join(targetDir, 'smart-instructions', 'roles'));
+        
+        const sDir = path.join(sourceDir, 'skills');
+        if (fs.existsSync(sDir)) fs.copySync(sDir, path.join(targetDir, 'smart-instructions', 'skills'));
+
+        const targetSkillMd = path.join(targetDir, 'smart-instructions', 'SKILL.md');
+        if (fs.existsSync(path.join(sourceDir, 'SKILL.md'))) {
+            fs.copyFileSync(path.join(sourceDir, 'SKILL.md'), targetSkillMd);
+        }
+
+        console.log(`\n${colors.bright}${colors.green}[Success] Official library updated!${colors.reset}\n`);
+    } catch (e) {
+        console.error(`${colors.red}[Error] Update failed: ${e.message}${colors.reset}`);
+    }
+  });
+
+// Handle no arguments gracefully
+if (process.argv.length === 2) {
+    process.argv.push('--help');
 }
+
+program.parse(process.argv);

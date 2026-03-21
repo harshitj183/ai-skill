@@ -38,5 +38,10 @@
   },
   "bugs": {
     "url": "https://github.com/harshitj183/ai-skills/issues"
+  },
+  "dependencies": {
+    "commander": "^14.0.3",
+    "fs-extra": "^11.3.4",
+    "inquirer": "^8.2.7"
   }
 }

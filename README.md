@@ -17,15 +17,21 @@ This library gives your AI agents extreme precision, bypassing general hallucina
 
 ---
 
-## <img src="https://cdn.simpleicons.org/npm" width="24" align="center" /> Quickstart: The Installer
+## <img src="https://cdn.simpleicons.org/npm" width="24" align="center" /> Quickstart: The Smart CLI
 
-Run our zero-dependency official installer inside any project directory (Next.js, Python, React Native, etc.) to instantly deploy the full library to your workspace.
+Our interactive CLI module gives you absolute control over what skills are deployed and auto-configures your IDE.
 
 ```bash
-npx @harshitj183/ai-skills init
+npx @harshitj183/ai-skills <command>
 ```
 
-> **Note for Cursor IDE users:** Move `smart-instructions/SKILL.md` to your project root and rename it to `.cursorrules` to automatically enforce global project rules across all your IDE chats.
+### Available Commands:
+1. **`init`** – Installs the full library quietly by default (perfect for letting your AI agent select skills dynamically).
+   - `npx @harshitj183/ai-skills init -i` (Interactive picker)
+   - `npx @harshitj183/ai-skills init -r frontend_expert.md -s react_best_practices.md` (CLI filtering)
+2. **`configure`** – Auto-detects and writes the rules file for your specific IDE (`.cursorrules`, `.windsurfrules`, `CLAUDE.md`, etc.).
+3. **`update`** – Safely pulls the newest official skills from the registry without overwriting your custom skills.
+4. **`create <skill_name>`** – Scaffolds a new highly-optimized custom Mega-Skill inside `smart-instructions/custom/`.
 
 ---
 
