@@ -23,7 +23,7 @@ const targetDirBase = path.join(targetDir, 'smart-instructions');
 program
   .name('ai-skills')
   .description('The Ultimate AI Skill Library CLI')
-  .version('2.2.4');
+  .version('2.2.5');
 
 program
   .command('init')
@@ -120,12 +120,22 @@ program
         });
     }
 
-    // Add History tracking for consumer context
-    console.log(`${colors.blue}[+] Initializing History tracking logs...${colors.reset}`);
-    const historyDir = path.join(sourceDir, 'history');
-    if (fs.existsSync(historyDir)) {
-        fs.copySync(historyDir, path.join(targetDirBase, 'history'));
-    }
+    // Add History tracking for consumer context (Fresh Templates)
+    console.log(`${colors.blue}[+] Initializing History tracking logs (Fresh Templates)...${colors.reset}`);
+    const targetHistoryDir = path.join(targetDirBase, 'history');
+    fs.ensureDirSync(targetHistoryDir);
+
+    const historyTemplates = {
+        'history.md': `# 📖 Project History & Context\n\nWelcome to your project's AI history hub. This system is designed to provide context for AI agents working on this project.\n\n### 📂 Modules\n| Module | Description | Link |\n| :--- | :--- | :--- |\n| **[AI Activity Log](ai_activity_log.md)** | Record of AI agent contributions. | [View Log](ai_activity_log.md) |\n| **[Project Timeline](project_timeline.md)** | Roadmap and milestones. | [View Timeline](project_timeline.md) |\n| **[Version History](version_history.md)** | Detailed release logs. | [View Versions](version_history.md) |\n\n---\n*Maintained by: AI Skills History System*`,
+        'ai_activity_log.md': `# 🤖 AI Activity Log\n\nThis log tracks specific contributions and tasks performed by AI agents in this project.\n\n---\n\n## 🏃 Active Session (Initial Setup)\n- **Task**: Initialized Smart AI Skills Library (v${program.version()}).\n- **Objective**: Established base AI context and roles library.\n\n---\n*Last updated by: AI Assistant (init)*`,
+        'project_timeline.md': `# 📅 Project Timeline\n\nMajor milestones and timeline of this project.\n\n---\n\n### ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}\n- **Initialized**: AI Skills Library integrated into the project.\n\n---\n*Last updated by: AI Assistant (init)*`,
+        'version_history.md': `# 📦 Version History\n\nVersion tracking for this specific project.\n\n---\n- **v0.1.0** (${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}): Initial setup with Smart AI Skills Library.\n\n---\n*Last updated by: AI Assistant (init)*`,
+        'milestones.md': `# 🏆 Project Milestones\n\nTracking the breakthrough moments of this project.\n\n---\n- **Initialization**: Integrated AI Skills Library (v${program.version()}).\n\n---\n*Last updated by: AI Assistant (init)*`
+    };
+
+    Object.entries(historyTemplates).forEach(([filename, content]) => {
+        fs.writeFileSync(path.join(targetHistoryDir, filename), content);
+    });
 
     console.log(`\n${colors.bright}${colors.green}[Success] The 'smart-instructions' folder has been added to your project!${colors.reset}`);
     console.log(`${colors.yellow}Tip: Let your AI Agent pick skills natively, or run 'npx ai-skills configure' to setup your IDE!${colors.reset}\n`);
@@ -257,7 +267,13 @@ program
         if (fs.existsSync(sDir)) fs.copySync(sDir, path.join(targetDir, 'smart-instructions', 'skills'));
 
         const hDir = path.join(sourceDir, 'history');
-        if (fs.existsSync(hDir)) fs.copySync(hDir, path.join(targetDir, 'smart-instructions', 'history'));
+        const targetHistoryDir = path.join(targetDir, 'smart-instructions', 'history');
+        if (fs.existsSync(hDir)) {
+            // Only update the guide, preserving consumer logs
+            const guide = 'history.md';
+            fs.ensureDirSync(targetHistoryDir);
+            if (fs.existsSync(path.join(hDir, guide))) fs.copyFileSync(path.join(hDir, guide), path.join(targetHistoryDir, guide));
+        }
 
         const targetSkillMd = path.join(targetDir, 'smart-instructions', 'SKILL.md');
         if (fs.existsSync(path.join(sourceDir, 'SKILL.md'))) {

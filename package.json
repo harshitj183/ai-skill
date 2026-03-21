@@ -1,6 +1,6 @@
 {
   "name": "@harshitj183/ai-skills",
-  "version": "2.2.4",
+  "version": "2.2.5",
   "description": "The Ultimate 18 Mega-Skills & 8 Roles Library for AI Agents (Cursor, Claude Code, Copilot, Antigravity) with AI History Tracking",
   "main": "bin/cli.js",
   "bin": {
@@ -10,47 +10,30 @@
     "bin/",
     "roles/",
     "skills/",
-    "history/",
     "SKILL.md",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
     "start": "node bin/cli.js",
-    "test": "echo \"Ready to supercharge your AI workflows!\""
-  },
-  "publishConfig": {
-    "access": "public"
+    "init": "node bin/cli.js init",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
     "ai",
-    "cursor",
-    "cursorrules",
-    "claude",
-    "claude-code",
-    "copilot",
-    "gemini",
-    "agentic",
-    "workflows",
-    "mcp",
-    "llm",
-    "typescript"
+    "skills",
+    "instructions",
+    "prompt-engineering",
+    "cursor-rules",
+    "agentic-ai",
+    "history-tracking"
   ],
-  "author": "Harshit Jaiswal <harshitj183@gmail.com>",
+  "author": "Harshit Joshi <harshitj183@gmail.com>",
   "license": "MIT",
-  "engines": {
-    "node": ">=14.0.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/harshitj183/ai-skills.git"
-  },
-  "bugs": {
-    "url": "https://github.com/harshitj183/ai-skills/issues"
-  },
   "dependencies": {
-    "commander": "^14.0.3",
-    "fs-extra": "^11.3.4",
-    "inquirer": "^8.2.7"
+    "commander": "^13.1.0",
+    "fs-extra": "^11.3.0",
+    "inquirer": "^9.0.0",
+    "chalk": "^4.1.2"
   }
 }
